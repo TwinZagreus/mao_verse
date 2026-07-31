@@ -216,8 +216,8 @@
 
   /* ── Page counter ── */
   .page-counter {
-    position: absolute; bottom: 2rem; left: 50%; transform: translateX(-50%);
     font-size: 0.7rem; color: var(--ink-faint); letter-spacing: 0.15em;
+    margin-left: auto; white-space: nowrap;
   }
 
   /* ── Right Side Navigation ── */
@@ -426,6 +426,7 @@
           <div class="poem-meta-el" style="animation-delay:${0.05}s">
             <span class="poem-category-tag">${p.category}</span>
             <span class="poem-date-el">${p.date}</span>
+            <span class="page-counter">${i + 1} / ${total}</span>
           </div>
           <h2 class="poem-title-el" style="animation-delay:${0.1}s">${p.title}</h2>
           <div class="poem-lines">
@@ -439,7 +440,6 @@
             ${p.background}
           </div>` : ''}
         </div>
-        <div class="page-counter">${i + 1} / ${total}</div>
       </section>`;
   }
 
