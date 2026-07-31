@@ -92,6 +92,67 @@
     opacity: 0; transform: translateY(16px);
     animation: revealUp 1s var(--transition-poem) 0.3s forwards;
   }
+  /* ── Search Box ── */
+  .search-box {
+    display: inline-flex;
+    align-items: center;
+    margin-top: 2rem;
+    border-bottom: 1px solid var(--ink-faint);
+    padding: 0.35rem 0;
+    transition: border-color 0.3s;
+    max-width: 400px;
+    width: 80%;
+  }
+  .search-box:focus-within {
+    border-color: var(--cinnabar);
+  }
+  .search-icon {
+    font-size: 0.85rem;
+    color: var(--ink-faint);
+    margin-right: 0.5rem;
+    flex-shrink: 0;
+    opacity: 0.6;
+  }
+  .search-input {
+    flex: 1;
+    border: none;
+    background: transparent;
+    font-family: 'Noto Serif SC', serif;
+    font-size: 0.95rem;
+    color: var(--ink);
+    outline: none;
+    letter-spacing: 0.05em;
+    min-width: 0;
+  }
+  .search-input::placeholder {
+    color: var(--ink-faint);
+    letter-spacing: 0.08em;
+  }
+  .search-clear {
+    background: none;
+    border: none;
+    color: var(--ink-faint);
+    cursor: pointer;
+    font-size: 0.9rem;
+    padding: 0 0.2rem;
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.2s;
+    flex-shrink: 0;
+  }
+  .search-clear.visible {
+    opacity: 0.6;
+    pointer-events: auto;
+  }
+  .search-clear:hover { opacity: 1; color: var(--cinnabar); }
+  .search-count {
+    font-size: 0.75rem;
+    color: var(--ink-faint);
+    letter-spacing: 0.1em;
+    margin-top: 0.6rem;
+    height: 1.2em;
+  }
+
   .hero-hint {
     position: absolute;
     bottom: 2.5rem; left: 50%; transform: translateX(-50%);
@@ -290,6 +351,12 @@
   <div class="snap-inner hero">
     <h1 class="hero-title">在巨浪中学会游泳</h1>
     <p class="hero-sub">毛泽东诗词</p>
+    <div class="search-box">
+      <span class="search-icon">&#x1F50D;</span>
+      <input class="search-input" id="searchInput" type="text" placeholder="搜诗词、正文、背景..." autocomplete="off">
+      <button class="search-clear" id="searchClear" aria-label="清除">&#x2715;</button>
+    </div>
+    <p class="search-count" id="searchCount"></p>
   </div>
   <div class="hero-hint">↓ 向下滚动</div>
 </section>
@@ -342,52 +409,106 @@
   }
   poems.sort((a, b) => parseDate(a.date) - parseDate(b.date));
 
-  /* ── Render poem sections ── */
+  /* ── Unified render: poems + nav ── */
   const container = document.getElementById('poemContainer');
-  container.innerHTML = poems.map((p, i) => `
-    <section class="snap-section poem-section" id="poem-${p.id}" data-index="${i}">
-      <div class="snap-inner">
-        <div class="poem-meta-el" style="animation-delay:${0.05}s">
-          <span class="poem-category-tag">${p.category}</span>
-          <span class="poem-date-el">${p.date}</span>
-        </div>
-        <h2 class="poem-title-el" style="animation-delay:${0.1}s">${p.title}</h2>
-        <div class="poem-lines">
-          ${p.content.map((line, li) =>
-            `<div class="poem-line-el" style="animation-delay:${0.15 + li * 0.06}s">${line}</div>`
-          ).join('')}
-        </div>
-        ${p.background ? `
-        <div class="poem-bg-el">
-          <div class="poem-bg-label">创 作 背 景</div>
-          ${p.background}
-        </div>` : ''}
-      </div>
-      <div class="page-counter">${i + 1} / ${poems.length}</div>
-    </section>
-  `).join('');
-
-  /* ── Render right nav ── */
   const navScroll = document.getElementById('navScroll');
-  navScroll.innerHTML = poems.map((p, i) => `
-    <li>
-      <button class="nav-item" data-target="poem-${p.id}">
-        <span class="nav-dot"></span>
-        <span>
-          <span class="nav-title">${p.title}</span>
-          <span class="nav-year">${p.date}</span>
-        </span>
-      </button>
-    </li>
-  `).join('');
+  let allSections = [];
 
-  /* ── Nav click → scroll to poem ── */
-  const navItems = navScroll.querySelectorAll('.nav-item');
-  navItems.forEach(item => {
-    item.addEventListener('click', () => {
-      const el = document.getElementById(item.dataset.target);
-      if (el) el.scrollIntoView({ behavior: 'smooth' });
+  function renderPoemSection(p, i, total) {
+    return `
+      <section class="snap-section poem-section" id="poem-${p.id}" data-index="${i}">
+        <div class="snap-inner">
+          <div class="poem-meta-el" style="animation-delay:${0.05}s">
+            <span class="poem-category-tag">${p.category}</span>
+            <span class="poem-date-el">${p.date}</span>
+          </div>
+          <h2 class="poem-title-el" style="animation-delay:${0.1}s">${p.title}</h2>
+          <div class="poem-lines">
+            ${p.content.map((line, li) =>
+              `<div class="poem-line-el" style="animation-delay:${0.15 + li * 0.06}s">${line}</div>`
+            ).join('')}
+          </div>
+          ${p.background ? `
+          <div class="poem-bg-el">
+            <div class="poem-bg-label">创 作 背 景</div>
+            ${p.background}
+          </div>` : ''}
+        </div>
+        <div class="page-counter">${i + 1} / ${total}</div>
+      </section>`;
+  }
+
+  function renderNavItem(p) {
+    return `
+      <li>
+        <button class="nav-item" data-target="poem-${p.id}">
+          <span class="nav-dot"></span>
+          <span>
+            <span class="nav-title">${p.title}</span>
+            <span class="nav-year">${p.date}</span>
+          </span>
+        </button>
+      </li>`;
+  }
+
+  function bindNavClicks() {
+    navScroll.querySelectorAll('.nav-item').forEach(item => {
+      item.addEventListener('click', () => {
+        const el = document.getElementById(item.dataset.target);
+        if (el) el.scrollIntoView({ behavior: 'smooth' });
+      });
     });
+  }
+
+  function renderAll(list) {
+    container.innerHTML = list.length === 0
+      ? '<section class="snap-section"><div class="snap-inner" style="text-align:center;color:var(--ink-light);padding:4rem 0"><p style="font-size:1.5rem;margin-bottom:0.5rem">&#x1F50E;</p><p>未找到匹配的诗词</p><p style="font-size:0.8rem;margin-top:0.3rem">试试其他关键词</p></div></section>'
+      : list.map((p, i) => renderPoemSection(p, i, list.length)).join('');
+    navScroll.innerHTML = list.map(p => renderNavItem(p)).join('');
+    bindNavClicks();
+    allSections = document.querySelectorAll('.poem-section');
+    updateNav();
+    /* trigger snap animation for visible sections */
+    requestAnimationFrame(() => {
+      const active = getActiveIndex();
+      allSections.forEach((s, i) => { s.classList.toggle('snapped', i === active); });
+    });
+  }
+
+  /* ── Filter ── */
+  function filterPoems(query) {
+    if (!query.trim()) return poems;
+    const q = query.trim().toLowerCase();
+    return poems.filter(p =>
+      p.title.toLowerCase().includes(q) ||
+      p.content.some(l => l.toLowerCase().includes(q)) ||
+      (p.background && p.background.toLowerCase().includes(q))
+    );
+  }
+
+  /* ── Search input ── */
+  const searchInput = document.getElementById('searchInput');
+  const searchClear = document.getElementById('searchClear');
+  const searchCount = document.getElementById('searchCount');
+  let debounceTimer;
+  searchInput.addEventListener('input', () => {
+    const val = searchInput.value;
+    searchClear.classList.toggle('visible', val.length > 0);
+    clearTimeout(debounceTimer);
+    debounceTimer = setTimeout(() => {
+      const filtered = filterPoems(val);
+      renderAll(filtered);
+      searchCount.textContent = val.trim()
+        ? `找到 ${filtered.length} 首`
+        : '';
+    }, 250);
+  });
+  searchClear.addEventListener('click', () => {
+    searchInput.value = '';
+    searchClear.classList.remove('visible');
+    renderAll(poems);
+    searchCount.textContent = '';
+    searchInput.focus();
   });
 
   /* ── Home button ── */
@@ -396,7 +517,6 @@
   });
 
   /* ── Scroll Spy ── */
-  const allSections = document.querySelectorAll('.poem-section');
   const heroSection = document.getElementById('hero');
 
   function getActiveIndex() {
@@ -413,10 +533,10 @@
 
   function updateNav() {
     const active = getActiveIndex();
-    navItems.forEach((item, i) => {
+    const items = navScroll.querySelectorAll('.nav-item');
+    items.forEach((item, i) => {
       item.classList.toggle('active', i === active);
     });
-    /* Trigger snap animations */
     allSections.forEach((s, i) => {
       s.classList.toggle('snapped', i === active);
     });
@@ -452,7 +572,8 @@
     }
   });
 
-  /* Also observe hero for initial state */
+  /* ── Initial render ── */
+  renderAll(poems);
   updateNav();
 })();
 </script>
