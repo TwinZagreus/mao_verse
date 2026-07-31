@@ -267,6 +267,7 @@
 
   /* Home nav item */
   .nav-home { margin-bottom: 0.2rem; }
+  .nav-home.hidden { display: none; }
   .nav-dot-home {
     width: 9px; height: 9px; border-radius: 0;
     border: none; background: transparent;
@@ -516,9 +517,14 @@
   });
 
   /* ── Home button ── */
-  document.getElementById('navHome').addEventListener('click', () => {
-    document.getElementById('hero').scrollIntoView({ behavior: 'smooth' });
+  const navHomeBtn = document.getElementById('navHome');
+  navHomeBtn.addEventListener('click', () => {
+    heroSection.scrollIntoView({ behavior: 'smooth' });
   });
+  function updateHomeBtn() {
+    const r = heroSection.getBoundingClientRect();
+    navHomeBtn.classList.toggle('hidden', r.bottom > window.innerHeight * 0.5);
+  }
 
   /* ── Scroll Spy ── */
   const heroSection = document.getElementById('hero');
@@ -553,7 +559,7 @@
   let ticking = false;
   document.addEventListener('scroll', () => {
     if (!ticking) {
-      requestAnimationFrame(() => { updateNav(); ticking = false; });
+      requestAnimationFrame(() => { updateNav(); updateHomeBtn(); ticking = false; });
       ticking = true;
     }
   }, { passive: true });
@@ -579,6 +585,7 @@
   /* ── Initial render ── */
   renderAll(poems);
   updateNav();
+  updateHomeBtn();
 })();
 </script>
 </body>
