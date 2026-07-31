@@ -486,6 +486,7 @@
     const q = query.trim().toLowerCase();
     return poems.filter(p =>
       p.title.toLowerCase().includes(q) ||
+      p.date.includes(q) ||
       p.content.some(l => l.toLowerCase().includes(q)) ||
       (p.background && p.background.toLowerCase().includes(q))
     );
