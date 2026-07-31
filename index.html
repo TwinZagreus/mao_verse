@@ -265,25 +265,17 @@
   }
   .nav-item.active { color: var(--ink); }
 
-  /* Nav action buttons (home + search) */
-  .nav-actions { display: flex; gap: 0.3rem; margin-bottom: 0.3rem; }
-  .nav-action-btn {
-    width: 28px; height: 28px;
-    border: 1px solid var(--ink-faint);
-    background: transparent;
-    border-radius: 50%;
-    cursor: pointer;
-    font-size: 0.75rem;
-    color: var(--ink-light);
+  /* Home nav item */
+  .nav-home { margin-bottom: 0.2rem; }
+  .nav-dot-home {
+    width: 9px; height: 9px; border-radius: 0;
+    border: none; background: transparent;
+    font-size: 0.7rem; line-height: 9px; text-align: center;
+    color: var(--ink-faint);
     display: flex; align-items: center; justify-content: center;
-    transition: all 0.3s;
-    flex-shrink: 0;
+    transition: color 0.3s;
   }
-  .nav-action-btn:hover {
-    border-color: var(--cinnabar);
-    color: var(--cinnabar);
-  }
-  .nav-home-btn.hidden { opacity: 0; pointer-events: none; }
+  .nav-home:hover .nav-dot-home { color: var(--cinnabar); }
   .nav-divider {
     width: 100%; height: 1px;
     background: var(--ink-faint); opacity: 0.25;
@@ -311,15 +303,10 @@
     .side-nav {
       position: fixed; right: auto; top: auto; bottom: 0; left: 0;
       width: 100%; max-height: none; z-index: 60;
-      background: linear-gradient(to top, var(--paper) 70%, rgba(250,246,237,0.92));
-      padding: 0.5rem 0.8rem 0.7rem; backdrop-filter: blur(8px);
-      flex-direction: row; align-items: center;
+      background: linear-gradient(to top, var(--paper) 65%, transparent);
+      padding: 0.6rem 0.8rem 0.8rem; backdrop-filter: blur(8px);
+      flex-direction: row;
     }
-    .nav-actions {
-      flex-direction: row; gap: 0.4rem; margin-bottom: 0; margin-right: 0.5rem;
-      flex-shrink: 0;
-    }
-    .nav-action-btn { width: 30px; height: 30px; font-size: 0.8rem; }
     .nav-scroll {
       display: flex; gap: 0.25rem; overflow-x: auto;
       padding-left: 0; padding-bottom: 0.2rem;
@@ -327,10 +314,10 @@
     }
     .nav-scroll::before { display: none; }
     .nav-scroll::-webkit-scrollbar { height: 2px; }
+    .nav-home { margin-bottom: 0; margin-right: 0.5rem; }
     .nav-divider {
-      width: 1px; height: 24px;
-      margin: 0 0.5rem; align-self: center;
-      flex-shrink: 0;
+      width: 1px; height: auto; min-height: 28px;
+      margin: 0 0.4rem; align-self: center;
     }
     .nav-item {
       flex-shrink: 0; flex-direction: column; align-items: center;
@@ -341,7 +328,7 @@
     .nav-dot { width: 5px; height: 5px; }
     .nav-title { font-size: 0.65rem; text-align: center; white-space: nowrap; }
     .nav-year { font-size: 0.55rem; }
-    .snap-section { padding: 3rem 1.2rem 5rem; }
+    .snap-section { padding: 3rem 1.2rem; }
     .poem-line-el { font-size: 1.1rem; }
     .hero-hint { bottom: 5rem; }
   }
@@ -384,10 +371,12 @@
 
 <!-- ══════ Right Navigation ══════ -->
 <nav class="side-nav" id="sideNav">
-  <div class="nav-actions" id="navActions">
-    <button class="nav-action-btn nav-home-btn" id="navHome" title="回到顶部">↑</button>
-    <button class="nav-action-btn nav-search-btn" id="navSearch" title="搜索">&#x1F50D;</button>
-  </div>
+  <button class="nav-item nav-home" id="navHome">
+    <span class="nav-dot nav-dot-home">↑</span>
+    <span>
+      <span class="nav-title">回到顶部</span>
+    </span>
+  </button>
   <div class="nav-divider"></div>
   <div class="nav-scroll" id="navScroll"></div>
 </nav>
@@ -523,23 +512,9 @@
   });
 
   /* ── Home button ── */
-  const navHomeBtn = document.getElementById('navHome');
-  navHomeBtn.addEventListener('click', () => {
+  document.getElementById('navHome').addEventListener('click', () => {
     document.getElementById('hero').scrollIntoView({ behavior: 'smooth' });
   });
-
-  /* ── Search button ── */
-  document.getElementById('navSearch').addEventListener('click', () => {
-    document.getElementById('hero').scrollIntoView({ behavior: 'smooth' });
-    setTimeout(() => searchInput.focus(), 600);
-  });
-
-  /* ── Hide home button on hero page ── */
-  function updateHomeBtn() {
-    const heroRect = heroSection.getBoundingClientRect();
-    const onHero = heroRect.top > -100 && heroRect.bottom > window.innerHeight * 0.3;
-    navHomeBtn.classList.toggle('hidden', onHero);
-  }
 
   /* ── Scroll Spy ── */
   const heroSection = document.getElementById('hero');
@@ -574,7 +549,7 @@
   let ticking = false;
   document.addEventListener('scroll', () => {
     if (!ticking) {
-      requestAnimationFrame(() => { updateNav(); updateHomeBtn(); ticking = false; });
+      requestAnimationFrame(() => { updateNav(); ticking = false; });
       ticking = true;
     }
   }, { passive: true });
