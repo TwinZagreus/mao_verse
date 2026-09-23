@@ -1,4 +1,8 @@
+
+
 # 毛泽东诗词 · 诗意墨韵
+
+https://twinzagreus.github.io/mao_verse/
 
 纯前端毛泽东诗词展示页面，宣纸长卷风格，逐首翻页浏览。
 
